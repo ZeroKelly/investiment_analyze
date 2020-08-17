@@ -2,6 +2,7 @@ import pandas as pd
 import requests
 import re
 import json
+import time
 from bs4 import BeautifulSoup
 
 from fund_desc_collect import *
@@ -77,4 +78,4 @@ if __name__ == '__main__':
     total_data = load_data()
     idx_data = total_data[total_data['基金类型'].str.find('指数')!=-1]
     idx_fund_detail = get_idx_fund_detail(idx_data)
-    idx_fund_detail.to_csv('指数基金细节表.csv', index=False)
+    idx_fund_detail.to_csv('./data/指数基金细节表.csv', index=False)
