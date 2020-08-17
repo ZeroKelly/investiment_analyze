@@ -8,7 +8,11 @@ from bs4 import BeautifulSoup
 from fund_desc_collect import *
 
 
-def load_data():
+def load_data(update=False):
+    '''
+    @param update: update=True to ignore and update local data
+    @return: pd.DataFrame basic fund info data
+    '''
     try:
         data = pd.read_csv('./data/基金基本数据抓取.csv')
     except:
@@ -16,12 +20,21 @@ def load_data():
     return data
 
 def code_validation(code):
+    '''
+    @param code: fund code
+    @return code: formalized 6 digits code
+    '''
     code = str(code)
     if len(code) < 6:
         code = (6-len(code))*'0'+code
     return code
 
 def get_fund_detail_page(session, code_num):
+    '''
+    @param session: request session
+    @param code_num: formalized 6 digits code
+    @return: detail page content about the fund associated with the code_num
+    '''
     valid_code = code_validation(code_num)
     url = 'http://fund.eastmoney.com/%s.html'%(valid_code)
     page = session.get(url)
@@ -29,23 +42,42 @@ def get_fund_detail_page(session, code_num):
     return content
 
 def get_follow_error(content):
+    '''
+    @param content: detail page content about the fund
+    @return: index fund follow error
+    '''
     follow_error = re.findall('跟踪误差：</a>(.*?)</td>', content)
     if len(follow_error) < 1:
         return None
     return follow_error[0]
 
 def parse_fund_detail(content):
+    '''
+    @param content: detail page content of a fund
+    @return: [fund_scale, manager_url, start_time, follow_error]
+    '''
     fund_scale, manager_url, start_time = re.findall('基金规模</a>：(.*?)</td>.*基金经理：<a href="(.*?)">.*>成 立 日</span>：(.*?)<', content)[0]
     follow_error = get_follow_error(content)
     return [fund_scale, manager_url, start_time, follow_error]
 
 def get_manager_info(session, manager_url):
+    '''
+    @param session: a request session
+    @param manager_url: a url_link to the page about the fund manager
+    @return manager_log, manager_profile:
+         manager_log: the manager history of the fund;
+         manager_profile: the resume of the current fund manager.
+    '''
     manager_page = session.get(manager_url)
     content = manager_page.content.decode('utf-8')
     manager_log, manager_profile = soup.find_all(name='table', attrs={'class':'w782 comm jloff'})
     return manager_log, manager_profile
 
 def parse_manager_info_table(table):
+    '''
+    @param table: content inside a html table tag
+    @return: pandas df format
+    '''
     th = []
     tds = []
     count = 0
@@ -59,6 +91,10 @@ def parse_manager_info_table(table):
     return res
 
 def get_idx_fund_detail(idx_data):
+    '''
+    @param idx_data: pandas df of all index fund_s basic information
+    @return: pandas df with appended detail information about input funds
+    '''
     session = init_fake_session()
     count = 0
     total = idx_data.shape[0]
