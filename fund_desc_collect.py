@@ -30,6 +30,10 @@ Referer: http://fund.eastmoney.com/daogou/aleWebKit/537.36 (KHTML, like Gecko) C
     return session
 
 def get_data(session):
+    '''connect to eastmoney and collect all basic fund information
+    @param session: session to use
+    @return: unformalized data
+    '''
     url_idx = 'http://fund.eastmoney.com/daogou/'
     main_page = session.get(url_idx)
     fund_count = re.findall('共找到 <span id="fund_count">(.*?)</span>只基金符合您的要求', main_page.content.decode('utf-8'))[0]
@@ -38,6 +42,10 @@ def get_data(session):
     return data
 
 def formalize_data(data):
+    '''
+    @param data: unformalized data collected by get_data()
+    @return: pandas_df
+    '''
     data = data.content.decode('utf-8').replace('var rankData =', '')
     json.loads(data).keys()
     data = json.loads(data).get('datas')
@@ -48,6 +56,9 @@ def formalize_data(data):
     return data
 
 def collect_index_info():
+    '''
+    return: pandas_df about basic information of fund collected from eastmoney
+    '''
     session = init_fake_session()
     data = get_data(session)
     data = formalize_data(data)

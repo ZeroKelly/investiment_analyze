@@ -70,6 +70,7 @@ def get_manager_info(session, manager_url):
     '''
     manager_page = session.get(manager_url)
     content = manager_page.content.decode('utf-8')
+    soup = BeautifulSoup(content)
     manager_log, manager_profile = soup.find_all(name='table', attrs={'class':'w782 comm jloff'})
     return manager_log, manager_profile
 
